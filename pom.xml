@@ -38,12 +38,20 @@
               <name>DumpTweetsLtrData</name>
             </program>
             <program>
+              <mainClass>io.anserini.index.IndexPlainText</mainClass>
+              <name>IndexPlainText</name>
+            </program>
+            <program>
               <mainClass>io.anserini.index.IndexTweets</mainClass>
               <name>IndexTweets</name>
             </program>
             <program>
               <mainClass>io.anserini.search.SearchTweets</mainClass>
               <name>SearchTweets</name>
+            </program>
+            <program>
+              <mainClass>io.anserini.search.SearchPlainText</mainClass>
+              <name>SearchPlainText</name>
             </program>
             <program>
               <mainClass>io.anserini.index.IndexGov2</mainClass>
