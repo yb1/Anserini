@@ -1,6 +1,7 @@
 package io.anserini.index;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -13,6 +14,14 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.jsoup.Jsoup;
+import java.io.*;
+import java.util.*;
+import java.net.*;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.conf.*;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.util.*;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -28,7 +37,7 @@ public class IndexPlainText {
     private IndexPlainText() {}
 
     private static final String HELP_OPTION = "h";
-    private static final String COLLECTION_OPTION = "collection";
+    private static final String INPUT_OPTION = "input";
     private static final String INDEX_OPTION = "index";
     public static final String FIELD_BODY = "body";
     public static final String FIELD_URL = "url";
@@ -40,7 +49,7 @@ public class IndexPlainText {
         options.addOption(new Option(HELP_OPTION, "show help"));
 
         options.addOption(OptionBuilder.withArgName("dir").hasArg()
-                .withDescription("source collection directory").create(COLLECTION_OPTION));
+                .withDescription("source collection directory").create(INPUT_OPTION));
         options.addOption(OptionBuilder.withArgName("dir").hasArg()
                 .withDescription("index location").create(INDEX_OPTION));
 
@@ -53,18 +62,24 @@ public class IndexPlainText {
             System.exit(-1);
         }
 
-        if (cmdline.hasOption(HELP_OPTION) || !cmdline.hasOption(COLLECTION_OPTION)
+        if (cmdline.hasOption(HELP_OPTION) || !cmdline.hasOption(INPUT_OPTION)
                 || !cmdline.hasOption(INDEX_OPTION)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp(IndexTweets.class.getName(), options);
             System.exit(-1);
         }
 
-        String collectionPath = cmdline.getOptionValue(COLLECTION_OPTION);
+        String inputPath = cmdline.getOptionValue(INPUT_OPTION);
         String indexPath = cmdline.getOptionValue(INDEX_OPTION);
 
-        LOG.info("collection: " + collectionPath);
+        LOG.info("input: " + inputPath);
         LOG.info("index: " + indexPath);
+
+
+        Configuration conf = new Configuration();
+        conf.addResource(new Path("/etc/hadoop/conf/core-site.xml"));
+        conf.addResource(new Path("/etc/hadoop/conf/hdfs-site.xml"));
+
 
         Directory dir = FSDirectory.open(Paths.get(indexPath));
         final IndexWriterConfig config = new IndexWriterConfig(new StandardAnalyzer());
@@ -72,8 +87,13 @@ public class IndexPlainText {
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
 
         IndexWriter writer = new IndexWriter(dir, config);
-
-        BufferedReader reader= new BufferedReader(new FileReader(collectionPath));
+        Path pt = new Path(inputPath);//"hdfs://cleon1.umiacs.umd.edu:8020/user/jrwiebe/EnchantedForest/part-08791");
+        FileSystem fs = FileSystem.get(conf);
+        FSDataInputStream reader = fs.open(pt);
+        System.out.println(reader.available());
+        //fs.close();
+        //BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(pt)));
+        //BufferedReader reader= new BufferedReader(new FileReader("hdfs://" + collectionPath));
 
         String row;
 

@@ -13,7 +13,24 @@
     <JETTY_VERSION>8.1.17.v20150415</JETTY_VERSION>
     <MUSTACHE_VERSION>0.8.18</MUSTACHE_VERSION>
     <JERSEY_VERSION>2.7</JERSEY_VERSION>
+    <hadoop.version>2.6.0-cdh5.5.0</hadoop.version>
   </properties>
+
+  <repositories>
+    <repository>
+      <id>maven</id>
+      <url>http://repo.maven.apache.org/maven2/</url>
+    </repository>
+    <repository>
+      <id>cloudera</id>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+    </repository>
+    <repository>
+      <id>internetarchive</id>
+      <name>Internet Archive Maven Repository</name>
+      <url>http://builds.archive.org:8080/maven2</url>
+    </repository>
+  </repositories>
 
   <build>
     <plugins>
@@ -46,12 +63,12 @@
               <name>IndexTweets</name>
             </program>
             <program>
-              <mainClass>io.anserini.search.SearchTweets</mainClass>
-              <name>SearchTweets</name>
-            </program>
-            <program>
               <mainClass>io.anserini.search.SearchPlainText</mainClass>
               <name>SearchPlainText</name>
+            </program>
+            <program>
+              <mainClass>io.anserini.search.SearchTweets</mainClass>
+              <name>SearchTweets</name>
             </program>
             <program>
               <mainClass>io.anserini.index.IndexGov2</mainClass>
@@ -280,6 +297,10 @@
       <artifactId>jersey-media-jaxb</artifactId>
       <version>2.22.1</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <version>${hadoop.version}</version>
+    </dependency>
   </dependencies>
 </project>
