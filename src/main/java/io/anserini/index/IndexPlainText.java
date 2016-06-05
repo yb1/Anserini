@@ -1,7 +1,10 @@
 package io.anserini.index;
 
 import org.apache.commons.cli.*;
-import org.apache.commons.cli.Options;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -13,18 +16,9 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.jsoup.Jsoup;
-import java.io.*;
-import java.util.*;
-import java.net.*;
-import org.apache.hadoop.fs.*;
-import org.apache.hadoop.conf.*;
-import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapred.*;
-import org.apache.hadoop.util.*;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.nio.file.Paths;
 
 /**
@@ -33,7 +27,6 @@ import java.nio.file.Paths;
 public class IndexPlainText {
     private static final Logger LOG = LogManager.getLogger(IndexPlainText.class);
 
-
     private IndexPlainText() {}
 
     private static final String HELP_OPTION = "h";
@@ -41,6 +34,54 @@ public class IndexPlainText {
     private static final String INDEX_OPTION = "index";
     public static final String FIELD_BODY = "body";
     public static final String FIELD_URL = "url";
+
+    public static void writeIndex(FileSystem fs, IndexWriter writer, FileStatus[] status) {
+        for (int i = 0; i < status.length; i++) {
+            FileStatus file = status[i];
+            Path pt = file.getPath();
+            String url;
+            if (file.isDirectory()) {
+                try {
+                    writeIndex(fs, writer, fs.listStatus(pt));
+                } catch (Exception e) {
+                    LOG.error("CANNOT access subdirectory for a directory {} ", pt.getName(), e);
+                }
+
+            } else {
+                try {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(pt)));
+
+                    String row;
+
+                    while ((row=reader.readLine())!= null)
+                    {
+                        String tokens[] = row.split("\\s", 2);
+
+                        if (tokens.length < 2) {
+                            LOG.error("Cannot tokenize for url {} ", tokens[0]);
+                            continue;
+                        }
+
+                        url = tokens[0];
+                        String body = tokens[1];
+
+                        if (url == null || body == null) {
+                            continue;
+                        }
+
+                        Document document = new Document();
+
+                        document.add(new StringField(FIELD_URL, url, Field.Store.YES));
+                        document.add(new TextField(FIELD_BODY, body, Field.Store.NO));
+                        writer.addDocument(document);
+                    }
+                    reader.close();
+                } catch (Exception e) {
+                    LOG.error("CANNOT write index for url {} from path {} ", pt.getName(), e);
+                }
+            }
+        }
+    }
 
     @SuppressWarnings("static-access")
     public static void main(String[] args) throws Exception {
@@ -87,34 +128,11 @@ public class IndexPlainText {
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
 
         IndexWriter writer = new IndexWriter(dir, config);
-        Path pt = new Path(inputPath);//"hdfs://cleon1.umiacs.umd.edu:8020/user/jrwiebe/EnchantedForest/part-08791");
         FileSystem fs = FileSystem.get(conf);
-        FSDataInputStream reader = fs.open(pt);
-        System.out.println(reader.available());
-        //fs.close();
-        //BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(pt)));
-        //BufferedReader reader= new BufferedReader(new FileReader("hdfs://" + collectionPath));
+        FileStatus[] status = fs.listStatus(new Path(inputPath));
+        writeIndex(fs, writer, status);
 
-        String row;
-
-        while ((row=reader.readLine())!= null)
-        {
-            String tokens[] = row.split("\\s", 2);
-
-            String url = tokens[0];
-            String body = tokens[1];
-
-            if (url == null || body == null) {
-                continue;
-            }
-
-            Document document = new Document();
-
-            document.add(new StringField(FIELD_URL, url, Field.Store.YES));
-            document.add(new TextField(FIELD_BODY, body, Field.Store.NO));
-            writer.addDocument(document);
-        }
         writer.close();
-        reader.close();
+
     }
 }
