@@ -13,12 +13,14 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.RAMDirectory;
+import org.apache.solr.store.hdfs.HdfsDirectory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -136,37 +138,15 @@ public class IndexPlainText {
 
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
 
-        IndexWriter writer = new IndexWriter(rdir, config);
+        HdfsDirectory hdfsDirectory = new HdfsDirectory(new Path(indexPath), conf);
+
+        //DirectoryReader ireader = DirectoryReader.open(hdfsDirectory);
+        IndexWriter writer = new IndexWriter(hdfsDirectory, config);
         FileSystem fs = FileSystem.get(conf);
         FileStatus[] status = fs.listStatus(new Path(inputPath));
         iterateFiles(fs, writer, status);
 
         writer.close();
 
-        // Getting files present in memory into an array.
-        String fileList[]=rdir.listAll();
-
-// Reading index files from memory and storing them to HDFS.
-        for (int i = 0; i < fileList.length; i++)
-        {
-            IndexInput indxfile = rdir.openInput(fileList[i].trim(), null);
-            long len = indxfile.length();
-            int len1 = (int) len;
-
-            // Reading data from file into a byte array.
-            byte[] bytarr = new byte[len1];
-            indxfile.readBytes(bytarr, 0, len1);
-
-// Creating file in HDFS directory with name same as that of
-//index file
-            Path src = new Path(fs.getWorkingDirectory() + "/" + indexPath + "/" + fileList[i].trim());
-            fs.createNewFile(src);
-
-            // Writing data from byte array to the file in HDFS
-            FSDataOutputStream ofs = fs.create(new Path(fs.getWorkingDirectory() + "/" + indexPath + "/" + fileList[i].trim()),true);
-            ofs.write(bytarr);
-            ofs.close();
-        }
-        fs.closeAll();
     }
 }

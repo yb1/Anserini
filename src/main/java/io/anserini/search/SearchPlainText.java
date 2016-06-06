@@ -17,6 +17,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.store.*;
+import org.apache.solr.store.hdfs.HdfsDirectory;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.OptionHandlerFilter;
@@ -65,33 +66,9 @@ public class SearchPlainText {
         RAMDirectory rdir = new RAMDirectory();
 
         String indexPath = searchArgs.index;
+        HdfsDirectory hdfsDirectory = new HdfsDirectory(new Path(indexPath), conf);
 
-        FileStatus[] status = dfs.listStatus(new Path(indexPath));
-
-        FSDataInputStream filereader = null;
-        for (int i = 0; i < status.length; i++)
-        {
-// Reading data from index files on HDFS directory into filereader object.
-            String fileName = status[i].getPath().getName();
-            filereader = dfs.open(new Path(dfs.getWorkingDirectory() + "/" + indexPath + "/" + fileName));
-
-            int size = filereader.available();
-
-            // Reading data from file into a byte array.
-            byte[] bytarr = new byte[size];
-            filereader.read(bytarr, 0, size);
-
-// Creating file in RAM directory with names same as that of
-//index files present in HDFS directory.
-            IndexOutput indxout = rdir.createOutput(fileName, null);
-
-            // Writing data from byte array to the file in RAM directory
-            indxout.writeBytes(bytarr,bytarr.length);
-            indxout.close();
-        }
-        filereader.close();
-
-        DirectoryReader ireader = DirectoryReader.open(rdir);
+        DirectoryReader ireader = DirectoryReader.open(hdfsDirectory);
         IndexSearcher isearcher = new IndexSearcher(ireader);
 
         Analyzer analyzer = new StandardAnalyzer();
