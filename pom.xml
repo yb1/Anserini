@@ -10,7 +10,7 @@
     <LUCENE_VERSION>5.3.1</LUCENE_VERSION>
     <!-- see http://download.eclipse.org/jetty/ Jetty9 forces Java 1.8, which causes all sorts of headaches
     For display special characters such as emoji expression, please set JETTY_VERSION to 9.3.5.v20151012 -->
-    <JETTY_VERSION>8.1.17.v20150415</JETTY_VERSION>
+    <JETTY_VERSION>9.3.9.v20160517</JETTY_VERSION>
     <MUSTACHE_VERSION>0.8.18</MUSTACHE_VERSION>
     <JERSEY_VERSION>2.7</JERSEY_VERSION>
     <hadoop.version>2.6.0-cdh5.5.0</hadoop.version>
@@ -50,6 +50,14 @@
         <configuration>
           <extraJvmArguments>-Xms512M -Xmx24576M</extraJvmArguments>
           <programs>
+            <program>
+              <mainClass>test.Server</mainClass>
+              <name>SearchHdfsServer</name>
+            </program>
+            <program>
+              <mainClass>test.App</mainClass>
+              <name>SearchServer</name>
+            </program>
             <program>
               <mainClass>io.anserini.ltr.DumpTweetsLtrData</mainClass>
               <name>DumpTweetsLtrData</name>
@@ -125,12 +133,12 @@
   <dependencies>
 
     <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
-      <version>${LUCENE_VERSION}</version>
-      <type>jar</type>
-      <scope>compile</scope>
-    </dependency>
+    <groupId>org.apache.lucene</groupId>
+    <artifactId>lucene-core</artifactId>
+    <version>${LUCENE_VERSION}</version>
+    <type>jar</type>
+    <scope>compile</scope>
+  </dependency>
     <dependency>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-core</artifactId>
@@ -277,7 +285,16 @@
       <artifactId>jetty-servlet</artifactId>
       <version>${JETTY_VERSION}</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-http</artifactId>
+      <version>${JETTY_VERSION}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-io</artifactId>
+      <version>${JETTY_VERSION}</version>
+    </dependency>
     <dependency>
       <groupId>com.github.spullara.mustache.java</groupId>
       <artifactId>compiler</artifactId>
@@ -309,14 +326,33 @@
     </dependency>
 
     <dependency>
-      <groupId>org.glassfish.jersey.media</groupId>
-      <artifactId>jersey-media-jaxb</artifactId>
-      <version>2.22.1</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
       <version>${hadoop.version}</version>
+      <exclusions>
+        <exclusion><artifactId>com.sun.jersey</artifactId><groupId>jersey-client</groupId></exclusion>
+        <exclusion><artifactId>com.sun.jersey</artifactId><groupId>jersey-core</groupId></exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>javax.mail-api</artifactId>
+      <version>1.5.5</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-server</artifactId>
+      <version>1.19</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>1.19</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.detro.ghostdriver</groupId>
+      <artifactId>phantomjsdriver</artifactId>
+      <version>1.1.0</version>
     </dependency>
   </dependencies>
 </project>
