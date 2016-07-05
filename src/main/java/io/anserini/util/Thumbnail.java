@@ -1,5 +1,8 @@
-package io.anserini.index;
+package io.anserini.util;
 
+import io.anserini.index.IndexArgs;
+import io.anserini.index.TermVectorsTextField;
+import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,22 +29,20 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by youngbinkim on 5/31/16.
+ * Created by youngbinkim on 7/5/16.
  */
-public class IndexPlainText {
-    private static final Logger LOG = LogManager.getLogger(IndexPlainText.class);
+public class Thumbnail {
+    private static final Logger LOG = LogManager.getLogger(Thumbnail.class);
 
-    private IndexPlainText() {}
+    private Thumbnail() {}
 
     private static final String HELP_OPTION = "h";
     private static final String INPUT_OPTION = "input";
-    private static final String INDEX_OPTION = "index";
-    public static final String FIELD_BODY = "body";
-    public static final String FIELD_URL = "url";
+    private static final String OUTPUT_OPTION = "output";
+    private static final String THREAD_OPTION = "threads";
 
     private final class IndexerThread extends Thread {
         final private Path inputWarcFile;
@@ -94,37 +95,21 @@ public class IndexPlainText {
         }
     }
 
-    public int indexWithThreads(int numThreads, Deque<Path> warcFiles, IndexWriter writer, FileSystem fs) throws IOException, InterruptedException {
+    public int screenshotWithThreads(int numThreads, Deque<Path> warcFiles, String output, FileSystem fs) throws IOException, InterruptedException {
         final ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
         int numIndexed = 0;
 
         try {
-            int i = 0;
-            while (!warcFiles.isEmpty()){
-                System.out.println("nope:" + i);
-                if (!warcFiles.isEmpty())
-                    executor.execute(new IndexerThread(writer, warcFiles.removeFirst(), fs));
-                else {
-                    if (!executor.isShutdown()) {
-                        Thread.sleep(30000);
-                        executor.shutdown();
-                    }
-                    break;
-                }
-                i++;
+            for (int i = 0; i < numThreads; i++) {
+
             }
 
             executor.shutdown();
             executor.awaitTermination(30, TimeUnit.DAYS);
-
-            writer.commit();
-            numIndexed = writer.maxDoc();
         } catch (Exception e) {
             e.printStackTrace();
             LOG.error("CANNOT index with threads.. ", e);
-        } finally {
-            writer.close();
         }
 
         return numIndexed;
@@ -154,37 +139,41 @@ public class IndexPlainText {
 
     @SuppressWarnings("static-access")
     public static void main(String[] args) throws Exception {
-        IndexArgs indexArgs = new IndexArgs();
+        Options options = new Options();
 
-        CmdLineParser parser = new CmdLineParser(indexArgs, ParserProperties.defaults().withUsageWidth(90));
+        options.addOption(new Option(HELP_OPTION, "show help"));
+        options.addOption(new Option(INPUT_OPTION, "input"));
+        options.addOption(new Option(OUTPUT_OPTION, "output"));
+        options.addOption(new Option(THREAD_OPTION, "num thread"));
+
+        CommandLine cmdline = null;
+        CommandLineParser parser = new GnuParser();
         try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println("Error parsing command line: " + e.getMessage());
+            cmdline = parser.parse(options, args);
+        } catch (ParseException exp) {
+            System.err.println("Error parsing command line: " + exp.getMessage());
             System.exit(-1);
         }
 
-        String inputPath = indexArgs.input;
-        String indexPath = indexArgs.index;
+        if (cmdline.hasOption(HELP_OPTION) || !cmdline.hasOption(INPUT_OPTION)
+                || !cmdline.hasOption(OUTPUT_OPTION)) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp(Thumbnail.class.getName(), options);
+            System.exit(-1);
+        }
 
-        LOG.info("input: " + inputPath);
-        LOG.info("index: " + indexPath);
+        String inputPath = cmdline.getOptionValue(INPUT_OPTION);
+        String outputPath = cmdline.getOptionValue(OUTPUT_OPTION);
+        int numThreads = Integer.parseInt(cmdline.getOptionValue(OUTPUT_OPTION));
 
-        int numThreads = indexArgs.threads;
-
-        Directory dir = FSDirectory.open(Paths.get(indexPath));
         Configuration conf = new Configuration();
         conf.addResource(new Path("/etc/hadoop/conf/core-site.xml"));
         conf.addResource(new Path("/etc/hadoop/conf/hdfs-site.xml"));
 
-        final IndexWriterConfig config = new IndexWriterConfig(new StandardAnalyzer());
-
-        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-
-        IndexWriter writer = new IndexWriter(dir, config);
         FileSystem fs = FileSystem.get(conf);
         FileStatus[] status = fs.listStatus(new Path(inputPath));
         final Deque<Path> fileStack = iterateFiles(fs, status);
-        new IndexPlainText().indexWithThreads(numThreads, fileStack, writer, fs);
+        new Thumbnail().screenshotWithThreads(numThreads, fileStack, outputPath, fs);
     }
 }
+
