@@ -65,8 +65,8 @@ public class Server {
             conf.addResource(new Path("/etc/hadoop/conf/core-site.xml"));
             conf.addResource(new Path("/etc/hadoop/conf/hdfs-site.xml"));
 
-            String indexPath = request.getParameter("index");
-            System.out.println(indexPath);
+            String indexPath = "lucene-index-enchanted"; // request.getParameter("index");
+            System.out.println("index :" + indexPath);
             HdfsDirectory hdfsDirectory = new HdfsDirectory(new Path(indexPath), conf);
 
             DirectoryReader ireader = DirectoryReader.open(hdfsDirectory);

@@ -51,6 +51,10 @@
           <extraJvmArguments>-Xms512M -Xmx24576M</extraJvmArguments>
           <programs>
             <program>
+              <mainClass>io.anserini.util.Thumbnail</mainClass>
+              <name>Thumbnail</name>
+            </program>
+            <program>
               <mainClass>test.Server</mainClass>
               <name>SearchHdfsServer</name>
             </program>
