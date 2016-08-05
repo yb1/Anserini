@@ -102,7 +102,6 @@ public class IndexPlainText {
         try {
             int i = 0;
             while (!warcFiles.isEmpty()){
-                System.out.println("nope:" + i);
                 if (!warcFiles.isEmpty())
                     executor.execute(new IndexerThread(writer, warcFiles.removeFirst(), fs));
                 else {

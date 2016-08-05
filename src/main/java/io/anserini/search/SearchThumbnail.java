@@ -72,6 +72,7 @@ public class SearchThumbnail  {
         QueryParser queryParser = new QueryParser(ThumbnailIndexer.FIELD_URL, analyzer);
         Query query = queryParser.parse(URLEncoder.encode(searchArgs.topics, "UTF-8"));
 
+
         TermQuery tq= new TermQuery(new Term("url", searchArgs.topics));
 // BooleanClauses Enum SHOULD says Use this operator for clauses that should appear in the matching documents.
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
@@ -84,7 +85,7 @@ public class SearchThumbnail  {
             int docId = hits[i].doc;
             Document hitDoc = isearcher.doc(docId);
 
-            System.out.println(hitDoc.get(ThumbnailIndexer.FIELD_URL));
+            //System.out.println(hitDoc.get(ThumbnailIndexer.FIELD_URL));
             System.out.println(hitDoc.get(ThumbnailIndexer.FIELD_BODY));
         }
         rdir.close();

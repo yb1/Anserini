@@ -55,6 +55,10 @@
               <name>Thumbnail</name>
             </program>
             <program>
+              <mainClass>test.ThumbnailServer</mainClass>
+              <name>ThumbnailServer</name>
+            </program>
+            <program>
               <mainClass>test.Server</mainClass>
               <name>SearchHdfsServer</name>
             </program>
@@ -71,12 +75,20 @@
               <name>IndexPlainText</name>
             </program>
             <program>
+              <mainClass>io.anserini.index.ThumbnailIndexer</mainClass>
+              <name>ThumbnailIndexer</name>
+            </program>
+            <program>
               <mainClass>io.anserini.index.IndexTweets</mainClass>
               <name>IndexTweets</name>
             </program>
             <program>
               <mainClass>io.anserini.search.SearchPlainText</mainClass>
               <name>SearchPlainText</name>
+            </program>
+            <program>
+              <mainClass>io.anserini.search.SearchThumbnail</mainClass>
+              <name>SearchThumbnail</name>
             </program>
             <program>
               <mainClass>io.anserini.search.SearchTweets</mainClass>
