@@ -57,7 +57,13 @@ public class App {
         private IndexSearcher isearcher;
         private DirectoryReader ireader;
         private Analyzer analyzer = new StandardAnalyzer();
-        private Map<String, Integer> dfMap = new HashMap<>();
+        final int MAX_ENTRIES = 60000;
+        private Map<String, Integer> dfMap = new LinkedHashMap(MAX_ENTRIES+1, .75F, true) {
+            // This method is called just after a new entry has been added
+            public boolean removeEldestEntry(Map.Entry eldest) {
+                return size() > MAX_ENTRIES;
+            }
+        };
 
         public HelloServlet() throws IOException {
             dir = FSDirectory.open(Paths.get("../../../scratch0/index-enchanted-forest"));
@@ -132,6 +138,7 @@ public class App {
                         Long freq = terms.totalTermFreq();
                         int df = dfMap.getOrDefault(term, ireader.docFreq(new Term(IndexPlainText.FIELD_BODY, term)));
                         dfMap.putIfAbsent(term, df);
+                        System.out.println(dfMap.size());
 
                         float idf = similarity.idf(df, docnum);
                         float tf = similarity.tf(freq);
