@@ -1,6 +1,7 @@
 package test;
 
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.sun.net.httpserver.HttpServer;
 import io.anserini.index.IndexPlainText;
 import io.anserini.index.ThumbnailIndexer;
@@ -33,6 +34,7 @@ import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Created by youngbinkim on 6/17/16.
@@ -57,13 +59,10 @@ public class App {
         private IndexSearcher isearcher;
         private DirectoryReader ireader;
         private Analyzer analyzer = new StandardAnalyzer();
-        final int MAX_ENTRIES = 60000;
-        private Map<String, Integer> dfMap = new LinkedHashMap(MAX_ENTRIES+1, .75F, true) {
-            // This method is called just after a new entry has been added
-            public boolean removeEldestEntry(Map.Entry eldest) {
-                return size() > MAX_ENTRIES;
-            }
-        };
+        final int MAX_ENTRIES = 10000;
+        private ConcurrentMap<String, Integer> dfMap = new ConcurrentLinkedHashMap.Builder<String, Integer>()
+                .maximumWeightedCapacity(MAX_ENTRIES)
+                .build();
 
         public HelloServlet() throws IOException {
             dir = FSDirectory.open(Paths.get("../../../scratch0/index-enchanted-forest"));
