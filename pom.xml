@@ -64,6 +64,11 @@
             </program>
             <program>
               <mainClass>test.App</mainClass>
+<jvmSettings>
+<initialMemorySize>512m</initialMemorySize>
+                <maxMemorySize>2560m</maxMemorySize>
+                <maxStackSize>1280m</maxStackSize>
+</jvmSettings>
               <name>SearchServer</name>
             </program>
             <program>

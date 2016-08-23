@@ -60,8 +60,8 @@ public class App {
         private IndexSearcher isearcher;
         private DirectoryReader ireader;
         private Analyzer analyzer = new StandardAnalyzer();
-        final int MAX_ENTRIES = 10000;
-        private int docnum; // = ireader.numDocs();
+        final private int docnum;
+        final int MAX_ENTRIES = 70000;
         private ConcurrentMap<String, Integer> dfMap = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                 .maximumWeightedCapacity(MAX_ENTRIES)
                 .build();
@@ -71,7 +71,7 @@ public class App {
                 .build();
 
         public HelloServlet() throws IOException {
-            dir = FSDirectory.open(Paths.get("../../../scratch0/index-enchanted-forest"));
+            dir = FSDirectory.open(Paths.get("../index-enchanted-forest"));
 
             ireader = DirectoryReader.open(dir);
             docnum = ireader.numDocs();
@@ -214,7 +214,7 @@ public class App {
         private IndexSearcher isearcher;
 
         public ThumbnailServlet() throws IOException {
-            this.dir = FSDirectory.open(Paths.get("../../../scratch0/thumbnails_forestTmpTmp"));
+            this.dir = FSDirectory.open(Paths.get("../thumbnails_forestTmpTmp"));
             DirectoryReader ireader = DirectoryReader.open(dir);
             isearcher = new IndexSearcher(ireader);
         }
