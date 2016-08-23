@@ -85,8 +85,10 @@ public class App {
             QueryParser queryParser = new QueryParser(IndexPlainText.FIELD_BODY, analyzer);
             Query query = queryParser.parse(queryString);
             ScoreDoc[] res = isearcher.search(query, 500).scoreDocs;
-            if (res != null && res.length > 0) {
+            if (res.length > 0) {
                 resMap.put(queryString, res);
+                System.out.println("INSERTING QUERY " + queryString);
+                System.out.println(resMap.containsKey(queryString));
             }
             return res;
         }
