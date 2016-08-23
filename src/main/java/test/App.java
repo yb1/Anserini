@@ -13,6 +13,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermsEnum;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.DefaultSimilarity;
@@ -60,47 +61,61 @@ public class App {
         private DirectoryReader ireader;
         private Analyzer analyzer = new StandardAnalyzer();
         final int MAX_ENTRIES = 10000;
+        private int docnum; // = ireader.numDocs();
         private ConcurrentMap<String, Integer> dfMap = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                 .maximumWeightedCapacity(MAX_ENTRIES)
+                .build();
+        final int MAX_RESULT_ARR_SIZE = 20;
+        private ConcurrentMap<String, ScoreDoc[]> resMap = new ConcurrentLinkedHashMap.Builder<String, ScoreDoc[]>()
+                .maximumWeightedCapacity(MAX_RESULT_ARR_SIZE)
                 .build();
 
         public HelloServlet() throws IOException {
             dir = FSDirectory.open(Paths.get("../../../scratch0/index-enchanted-forest"));
 
             ireader = DirectoryReader.open(dir);
+            docnum = ireader.numDocs();
             isearcher = new IndexSearcher(ireader);
 
             analyzer = new StandardAnalyzer();
         }
 
+        private ScoreDoc[] getQueryResults(String queryString) throws IOException, ParseException {
+            QueryParser queryParser = new QueryParser(IndexPlainText.FIELD_BODY, analyzer);
+            Query query = queryParser.parse(queryString);
+            ScoreDoc[] res = isearcher.search(query, 500).scoreDocs;
+            if (res != null && res.length > 0) {
+                resMap.put(queryString, res);
+            }
+            return res;
+        }
         @Override
         protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
             // Parse a simple query that searches for "text":
-            QueryParser queryParser = new QueryParser(IndexPlainText.FIELD_BODY, analyzer);
-            Query query;
+            String queryString;
             String go;
             int startId;
+            ScoreDoc[] hits;
+
             try {
-                String queryString = request.getParameter("query");
+                queryString = request.getParameter("query");
                 go = request.getParameter("terms");
                 System.out.println(queryString);
-                query = queryParser.parse(queryString);
+
                 String startIdStr = request.getParameter("startId");
                 System.out.println("start : " + startIdStr);
                 startId = (startIdStr == null) ? 0 : Integer.parseInt(startIdStr);
+                hits = resMap.getOrDefault(queryString, getQueryResults(queryString));
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
             }
 
-            ScoreDoc[] hits = isearcher.search(query, 1000).scoreDocs;
             System.out.println("hit length " + hits.length);
             ArrayList<SearchUrl> list = new ArrayList<>();
             // Iterate through the results:
 
-
             DefaultSimilarity similarity = new DefaultSimilarity();
-            int docnum = ireader.numDocs();
             Set<String> seen = new HashSet();
             int counter = 0;
             int i = startId;
@@ -111,13 +126,15 @@ public class App {
                 Document hitDoc = isearcher.doc(docId);
 
                 String url = hitDoc.get("url");
-                if (url.endsWith("index.html")) {
-                    url = url.substring(0, url.lastIndexOf("index.html"));
+                String urlKey = url;
+                if (url.endsWith("index.html") || url.endsWith("index.html/") ||
+                        url.endsWith("index.htm") || url.endsWith("index.htm/")) {
+                    urlKey = url.substring(0, url.lastIndexOf("index.htm"));
                 }
-                if (seen.contains(url)){
+                if (seen.contains(urlKey)){
                     continue;
                 } else {
-                    seen.add(url);
+                    seen.add(urlKey);
                     counter++;
                 }
 
