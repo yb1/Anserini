@@ -108,7 +108,7 @@ public class App {
                 String startIdStr = request.getParameter("startId");
                 System.out.println("start : " + startIdStr);
                 startId = (startIdStr == null) ? 0 : Integer.parseInt(startIdStr);
-                hits = resMap.getOrDefault(queryString, getQueryResults(queryString));
+                hits = (resMap.containsKey(queryString)) ? resMap.get(queryString) : getQueryResults(queryString);
                 System.out.println("ALWAYS TRUE ? = " + resMap.containsKey(queryString));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -156,7 +156,7 @@ public class App {
 
                         // System.out.println("term: " + term);
                         Long freq = terms.totalTermFreq();
-                        int df = dfMap.getOrDefault(term, ireader.docFreq(new Term(IndexPlainText.FIELD_BODY, term)));
+                        int df = (dfMap.containsKey(term)) ? dfMap.get(term) : ireader.docFreq(new Term(IndexPlainText.FIELD_BODY, term));
                         dfMap.putIfAbsent(term, df);
                         // System.out.println(dfMap.size());
 
