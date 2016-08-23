@@ -109,6 +109,7 @@ public class App {
                 System.out.println("start : " + startIdStr);
                 startId = (startIdStr == null) ? 0 : Integer.parseInt(startIdStr);
                 hits = resMap.getOrDefault(queryString, getQueryResults(queryString));
+                System.out.println("ALWAYS TRUE ? = " + resMap.containsKey(queryString));
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
