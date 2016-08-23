@@ -81,6 +81,7 @@ public class App {
         }
 
         private ScoreDoc[] getQueryResults(String queryString) throws IOException, ParseException {
+            System.out.println("NEW QUERY " + queryString);
             QueryParser queryParser = new QueryParser(IndexPlainText.FIELD_BODY, analyzer);
             Query query = queryParser.parse(queryString);
             ScoreDoc[] res = isearcher.search(query, 500).scoreDocs;
@@ -154,7 +155,7 @@ public class App {
                         Long freq = terms.totalTermFreq();
                         int df = dfMap.getOrDefault(term, ireader.docFreq(new Term(IndexPlainText.FIELD_BODY, term)));
                         dfMap.putIfAbsent(term, df);
-                        System.out.println(dfMap.size());
+                        // System.out.println(dfMap.size());
 
                         float idf = similarity.idf(df, docnum);
                         float tf = similarity.tf(freq);
@@ -176,7 +177,7 @@ public class App {
 
                 while(!minHeap.isEmpty()) {
                     SearchTerm cur = minHeap.poll();
-                    System.out.println("term " + cur.getTerm() + ":" + cur.getScore());
+                    // System.out.println("term " + cur.getTerm() + ":" + cur.getScore());
                     termsList.add(0, "\"" + cur.getTerm() + "\"");
                 }
                 list.add(new SearchUrl(url, termsList));
